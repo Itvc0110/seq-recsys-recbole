@@ -2,6 +2,7 @@ from recbole.quick_start import run_recbole
 from recbole.config import Config
 import os
 import traceback
+import torch
 
 models = ['GRU4Rec', 'SASRec']
 datasets = ['ml-1m', 'ml-20m', 'Books', 'Sports_and_Outdoors', 'Beauty', 'Electronics', 'yelp']
