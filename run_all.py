@@ -1,7 +1,5 @@
-from recbole.quick_start import load_data_and_model
-from recbole.trainer import Trainer
+from recbole.quick_start import run_recbole
 from recbole.config import Config
-from recbole.utils import init_seed, init_logger, get_model, get_trainer
 import os
 import traceback
 
@@ -15,56 +13,51 @@ config_files = {
 
 os.makedirs('results', exist_ok=True)
 
-for model_name in models:
-    for dataset_name in datasets:
-        dataset_dir = f"./data/{dataset_name}"
-        inter_file = f"{dataset_dir}/{dataset_name}.inter"
+for model in models:
+    for dataset in datasets:
+        dataset_dir = f"./data/{dataset}"
+        inter_file = f"{dataset_dir}/{dataset}.inter"
         
         if not (os.path.exists(dataset_dir) and os.path.exists(inter_file)):
-            print(f"Skipping {model_name} on {dataset_name}: Dataset folder or .inter file not found.")
+            print(f"Skipping {model} on {dataset}: Dataset folder or .inter file not found.")
             continue
         
-        print(f"Running {model_name} on {dataset_name}...")
+        print(f"Running {model} on {dataset}...")
         
         try:
-            # Load config
-            config = Config(model=model_name, dataset=dataset_name, config_file_list=config_files[model_name])
+            config = Config(model=model, dataset=dataset, config_file_list=config_files[model])
             
-            # Force single process (extra safety)
+            # Force single process + disable any distributed
             config['nproc'] = 1
             config['world_size'] = 1
             config['local_rank'] = 0
+            config['use_gpu'] = True if torch.cuda.is_available() else False
             
-            # Large dataset overrides
-            if dataset_name in ['ml-20m', 'Electronics']:
+            # IMPORTANT: Disable checkpoint loading for fresh training
+            config['load_collected'] = False
+            config['resume_training'] = False
+            
+            # Prevent any model_file loading bug
+            if 'model_file' in config.final_config_dict:
+                del config.final_config_dict['model_file']
+            
+            # Large dataset tuning
+            if dataset in ['ml-20m', 'Electronics']:
                 config['MAX_ITEM_LIST_LENGTH'] = 200
                 config['train_batch_size'] = 512
             
-            # Initialize seed and logger
-            init_seed(config['seed'], config['reproducibility'])
-            init_logger(config)
+            result = run_recbole(
+                model=model,
+                dataset=dataset,
+                config_file_list=config_files[model],
+                config_dict=config.final_config_dict,
+                saved=True
+            )
             
-            # Load data and model (this is the safe, low-level way)
-            dataset, train_data, valid_data, test_data = load_data_and_model(config)
-            model = get_model(config['model'])(config, train_data.dataset).to(config['device'])
-            
-            # Trainer
-            trainer = get_trainer(config['MODEL_TYPE'], config['model'])(config, model)
-            
-            # Train + evaluate
-            best_valid_score, best_valid_result = trainer.fit(train_data, valid_data, saved=True)
-            test_result = trainer.evaluate(test_data, load_best_model=True)
-            
-            result = {
-                'best_valid_score': best_valid_score,
-                'best_valid_result': best_valid_result,
-                'test_result': test_result
-            }
-            
-            with open(f'results/{model_name}_{dataset_name}.txt', 'w') as f:
+            with open(f'results/{model}_{dataset}.txt', 'w') as f:
                 f.write(str(result))
-            print(f"Completed {model_name} on {dataset_name}. Results: {result}")
+            print(f"Completed {model} on {dataset}. Results: {result}")
         except Exception as e:
-            print(f"Error running {model_name} on {dataset_name}: {str(e)}")
+            print(f"Error running {model} on {dataset}: {str(e)}")
             traceback.print_exc()
             print("Skipping.")
