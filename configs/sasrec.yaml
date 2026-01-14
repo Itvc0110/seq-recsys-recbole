@@ -1,9 +1,10 @@
-embedding_size: 64   
-hidden_size: 64      
-num_layers: 2        
-num_heads: 2         
-dropout_prob: 0.5    
-inner_size: 256      
-hidden_act: gelu     
+# SASRec specific (Transformer)
+embedding_size: 64   # Item embedding dim
+hidden_size: 64      # Attention hidden
+num_layers: 2        # Transformer blocks
+num_heads: 2         # Multi-head attention
+dropout_prob: 0.5    # Dropout
+inner_size: 256      # Feed-forward dim
+hidden_act: gelu     # Activation
 attn_dropout_prob: 0.5
-loss_type: CE
+loss_type: BPR       # Proxy for original BCE with sampling

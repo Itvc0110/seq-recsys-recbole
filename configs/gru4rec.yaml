@@ -1,5 +1,6 @@
-embedding_size: 64  
-hidden_size: 128    
-num_layers: 1      
-dropout_prob: 0.3   
-loss_type: CE     
+# GRU4Rec specific (layered GRU)
+embedding_size: 64  # Item embedding dim
+hidden_size: 128    # GRU hidden state
+num_layers: 2       # Stacked GRUs
+dropout_prob: 0.3   # Dropout rate
+loss_type: BPR      # Matches original's BPR/TOP1 with sampling

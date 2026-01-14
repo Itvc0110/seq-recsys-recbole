@@ -1,10 +1,12 @@
+# General
 gpu_id: 0
-use_gpu: true  
-seed: 42
+use_gpu: true  # Set to false if no GPU
+seed: 2020
 state: INFO
 reproducibility: true
 data_path: ./data/
 
+# Dataset fields for sequential rec
 USER_ID_FIELD: user_id
 ITEM_ID_FIELD: item_id
 TIME_FIELD: timestamp
@@ -12,27 +14,26 @@ load_col:
   inter: [user_id, item_id, timestamp]
 ITEM_LIST_LENGTH_FIELD: item_length
 LIST_SUFFIX: _list
-MAX_ITEM_LIST_LENGTH: 50  
+MAX_ITEM_LIST_LENGTH: 50  # Default; override per dataset if needed (e.g., 200 for ml-20m)
 
+# Training with negative sampling
 epochs: 200
 train_batch_size: 512
 eval_batch_size: 512
+train_neg_sample_args:
+  distribution: uniform
+  sample_num: 1  # 1 negative per positive, as in originals
 
-#train_neg_sample_args:
-# distribution: uniform
-#  sample_num: 1
-train_neg_sample_args: null
-
-neg_sampling: null  
-
+# Evaluation
 eval_args:
   group_by: user
   order: TO  # Temporal Order
-  split: {'LS': 'valid_and_test'}  
+  split: {'LS': 'valid_and_test'}  # Leave-one-out: last for test, second-last for valid
   mode: full
 metrics: ['MRR', 'NDCG', 'Hit']
 topk: [5, 10, 20]
 valid_metric: NDCG@10
 
+# Filtering (optional, add for better data quality)
 user_inter_num_interval: "[5,inf)"  # Users with >=5 interactions
-item_inter_num_interval: "[5,inf)"  # Items with >=5 interactions
+item_inter_num_interval: "[5,inf)"  # Items with >=5 interactions 
