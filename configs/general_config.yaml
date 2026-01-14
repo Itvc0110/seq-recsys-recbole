@@ -17,9 +17,12 @@ MAX_ITEM_LIST_LENGTH: 50
 epochs: 200
 train_batch_size: 512
 eval_batch_size: 512
-train_neg_sample_args:
-  distribution: uniform
-  sample_num: 1
+
+#train_neg_sample_args:
+# distribution: uniform
+#  sample_num: 1
+train_neg_sample_args: null
+
 neg_sampling: null  
 
 eval_args:
